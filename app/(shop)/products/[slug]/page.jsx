@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 
 import ProductDetail from '@/components/product/ProductDetail'
+import ReviewSection from '@/components/product/ReviewSection'
 import { ApiError } from '@/lib/apiClient'
 import { getColorSwatches } from '@/lib/colors'
 import { getBySlug } from '@/services/productService'
@@ -42,10 +43,18 @@ export default async function ProductPage({ params }) {
   }
 
   return (
-    <section className="section">
+    <>
+      <section className="section">
+        <div className="container">
+          <ProductDetail product={product} swatches={swatches} />
+        </div>
+      </section>
+
+      {/* Sibling of the product detail section rather than a child of
+          ProductDetail, so the product layout stays independent of reviews. */}
       <div className="container">
-        <ProductDetail product={product} swatches={swatches} />
+        <ReviewSection productId={product.id} />
       </div>
-    </section>
+    </>
   )
 }
