@@ -1,0 +1,24 @@
+.wrap {
+  display: flex;
+  justify-content: center;
+  padding: 3rem var(--gutter) 4rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 26rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-bg);
+}
+
+@media (min-width: 640px) {
+  .wrap {
+    padding: 4rem var(--gutter) 5rem;
+  }
+
+  .card {
+    padding: 2rem;
+  }
+}

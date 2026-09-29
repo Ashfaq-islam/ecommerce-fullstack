@@ -1,0 +1,339 @@
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+  min-width: 0;
+}
+
+.label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.input {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+  font-size: 0.9375rem;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input::placeholder {
+  color: var(--color-text-subtle);
+}
+
+.input:hover:not(:disabled) {
+  border-color: var(--color-text-subtle);
+}
+
+.input:focus {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-focus-ring);
+  outline: none;
+}
+
+.input:disabled {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.inputInvalid {
+  border-color: var(--color-danger);
+}
+
+.inputInvalid:focus {
+  border-color: var(--color-danger);
+  box-shadow: var(--shadow-focus-ring-danger);
+}
+
+.error {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-danger);
+}
+
+.hint {
+  font-size: 0.75rem;
+  color: var(--color-text-subtle);
+}
+
+.passwordRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.passwordRow .input {
+  padding-right: 4.25rem;
+}
+
+.reveal {
+  position: absolute;
+  right: 0.375rem;
+  padding: 0.3125rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.reveal:hover:not(:disabled) {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.reveal:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.meter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.125rem;
+}
+
+.meterTrack {
+  display: flex;
+  flex: 1;
+  gap: 0.1875rem;
+}
+
+.meterSegment {
+  flex: 1;
+  height: 0.25rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-muted);
+  transition: background-color var(--transition-fast);
+}
+
+.meterSegment[data-filled] {
+  background-color: var(--color-danger);
+}
+
+.meterSegment[data-score='1'] {
+  background-color: var(--color-star);
+}
+
+.meterSegment[data-score='2'] {
+  background-color: var(--color-meter-fair);
+}
+
+.meterSegment[data-score='3'] {
+  background-color: var(--color-meter-good);
+}
+
+.meterSegment[data-score='4'] {
+  background-color: var(--color-success);
+}
+
+.meterLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+  min-width: 3.5rem;
+  text-align: right;
+}
+
+.formError {
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background-color: var(--color-danger-soft);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-danger);
+}
+
+.submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background-color: var(--color-inverse-bg);
+  color: var(--color-inverse-text);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  transition: opacity var(--transition-fast);
+}
+
+.submit:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentcolor;
+  border-top-color: transparent;
+  border-radius: var(--radius-full);
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover {
+  color: var(--color-accent-hover);
+}
+
+.footer {
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--color-border);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.footerLink {
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.footerLink:hover {
+  color: var(--color-accent-hover);
+}
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.demoCode {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  color: var(--color-text);
+}
+
+@media (min-width: 640px) {
+  .title {
+    font-size: 1.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .input,
+  .reveal,
+  .submit,
+  .spinner,
+  .meterSegment {
+    transition: none;
+    animation: none;
+  }
+}
+
+/*
+ * Placeholder for the sign-in form while it renders on the client. LoginForm
+ * reads `next` from the URL, so that subtree cannot be prerendered and the
+ * Suspense boundary needs something to stand in for it instead of nothing.
+ */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skeletonBlock {
+  height: 2.75rem;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-muted);
+}
+
+.skeletonShort {
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+}
+
+.skeletonNote {
+  height: 4.5rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .skeletonBlock {
+    animation: skeletonPulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+}

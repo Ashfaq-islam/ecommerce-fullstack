@@ -1,0 +1,61 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-bg);
+}
+
+.skeletonMedia {
+  aspect-ratio: 1 / 1;
+  background-color: var(--color-surface-muted);
+}
+
+.skeletonBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.875rem;
+}
+
+.skeletonLine {
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-muted);
+}
+
+.skeletonBrand {
+  width: 40%;
+  height: 0.625rem;
+}
+
+.skeletonTitle {
+  width: 85%;
+  height: 0.875rem;
+}
+
+.skeletonPrice {
+  width: 45%;
+  height: 1rem;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}

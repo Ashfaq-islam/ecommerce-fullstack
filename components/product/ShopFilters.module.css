@@ -1,0 +1,337 @@
+.mobileBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.mobileTrigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.mobileTrigger:hover {
+  border-color: var(--color-accent);
+}
+
+.countBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding: 0 0.25rem;
+  border-radius: var(--radius-full);
+  background-color: var(--color-inverse-bg);
+  color: var(--color-inverse-text);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+  background-color: var(--color-backdrop);
+}
+
+.panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: var(--z-drawer);
+  display: flex;
+  flex-direction: column;
+  width: min(20rem, 85vw);
+  visibility: hidden;
+  background-color: var(--color-bg);
+  border-right: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(-100%);
+  transition: transform var(--transition-base), visibility var(--transition-base);
+}
+
+.panelOpen {
+  visibility: visible;
+  transform: translateX(0);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.panelTitle {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.panelActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.clearButton {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  transition: color var(--transition-fast);
+}
+
+.clearButton:hover {
+  color: var(--color-accent-hover);
+}
+
+.closeButton {
+  display: inline-flex;
+  padding: 0.375rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.closeButton:hover {
+  background-color: var(--color-surface-muted);
+  color: var(--color-text);
+}
+
+.panelBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.25rem 1rem 1rem;
+}
+
+.group {
+  padding: 1rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.group:last-child {
+  border-bottom: 0;
+}
+
+.groupTitle {
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.groupBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.checkLabel {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.checkRow:hover .checkLabel {
+  color: var(--color-text);
+}
+
+.priceRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.priceField {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.priceLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-subtle);
+}
+
+.priceInput {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-bg);
+  font-size: 0.875rem;
+  transition: border-color var(--transition-fast);
+}
+
+.priceInput:hover {
+  border-color: var(--color-border-strong);
+}
+
+.priceSeparator {
+  padding-bottom: 0.5rem;
+  color: var(--color-text-subtle);
+}
+
+.priceHint {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-subtle);
+}
+
+.priceActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.applyButton {
+  padding: 0.4375rem 0.875rem;
+  border-radius: var(--radius-md);
+  background-color: var(--color-inverse-bg);
+  color: var(--color-inverse-text);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  transition: opacity var(--transition-fast);
+}
+
+.applyButton:hover {
+  opacity: 0.85;
+}
+
+.resetButton {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-accent);
+  transition: color var(--transition-fast);
+}
+
+.resetButton:hover {
+  color: var(--color-accent-hover);
+}
+
+.panelFooter {
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.showResultsButton {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border-radius: var(--radius-md);
+  background-color: var(--color-inverse-bg);
+  color: var(--color-inverse-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: opacity var(--transition-fast);
+}
+
+.showResultsButton:hover {
+  opacity: 0.85;
+}
+
+@media (min-width: 1024px) {
+  .mobileBar,
+  .scrim,
+  .closeButton,
+  .panelFooter {
+    display: none;
+  }
+
+  .panel {
+    position: sticky;
+    top: calc(var(--header-height) + 1.5rem);
+    bottom: auto;
+    z-index: var(--z-floating);
+    visibility: visible;
+    width: auto;
+    max-height: calc(100dvh - var(--header-height) - 3rem);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: none;
+    transform: none;
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel,
+  .clearButton,
+  .resetButton {
+    transition: none;
+  }
+}
+
+/*
+ * Facet options arrive from the catalogue service, so the panel is briefly
+ * empty on first paint. This reserves the space and announces the wait instead
+ * of letting the groups pop in.
+ */
+.facetStatus {
+  min-height: 8rem;
+  margin: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-muted);
+}
+
+.facetStatus[role='alert'] {
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  padding: 0.75rem 0.875rem;
+  background-color: transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-danger);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .facetStatus[aria-busy='true'] {
+    animation: facetPulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes facetPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.55;
+  }
+}

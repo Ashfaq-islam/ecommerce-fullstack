@@ -1,0 +1,127 @@
+.selector {
+  display: flex;
+  flex-direction: column;
+  gap: 1.125rem;
+}
+
+.group {
+  padding: 0;
+  border: 0;
+}
+
+.legend {
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.hint {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-subtle);
+}
+
+.sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.625rem;
+}
+
+.size {
+  min-width: 3rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background-color: var(--color-bg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.size:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.sizeSelected {
+  border-color: var(--color-inverse-bg);
+  background-color: var(--color-inverse-bg);
+  color: var(--color-inverse-text);
+}
+
+.sizeDisabled {
+  color: var(--color-text-subtle);
+  background-color: var(--color-surface-muted);
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-top: 0.625rem;
+}
+
+.swatch {
+  position: relative;
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background-color: var(--color-bg);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.swatch:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.swatchSelected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-accent);
+}
+
+.swatchFill {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  right: 3px;
+  bottom: 3px;
+  border-radius: var(--radius-full);
+  background-color: var(--swatch-color);
+}
+
+.swatchStrike {
+  position: absolute;
+  top: 50%;
+  left: 12%;
+  width: 76%;
+  height: 2px;
+  border-radius: 1px;
+  background-color: var(--color-text);
+  transform: rotate(-45deg);
+  opacity: 0;
+}
+
+.swatchDisabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.swatchDisabled .swatchStrike {
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .size,
+  .swatch {
+    transition: none;
+  }
+}
