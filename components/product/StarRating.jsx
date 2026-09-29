@@ -66,6 +66,8 @@ export default function StarRating({
   label = null,
   name = 'rating',
   onChange = null,
+  describedBy = null,
+  invalid = false,
 }) {
   const rating = clamp(value)
   const sizeClass = SIZE_CLASS[size] ?? SIZE_CLASS.md
@@ -75,7 +77,13 @@ export default function StarRating({
     const selected = Math.round(rating)
 
     return (
-      <span className={className} role="radiogroup" aria-label={label ?? 'Rating'}>
+      <span
+        className={className}
+        role="radiogroup"
+        aria-label={label ?? 'Rating'}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy ?? undefined}
+      >
         {Array.from({ length: MAX_RATING }, (_, index) => {
           const star = index + 1
 
