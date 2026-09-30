@@ -1,0 +1,6 @@
+# DCMS local data — do not commit
+dcms.db
+dcms.db-shm
+dcms.db-wal
+dcms-media/
+.env

@@ -1,0 +1,226 @@
+version: "1"
+
+meta:
+  name: "DCMS Ecommerce"
+  base_url: /api/v1
+
+auth:
+  provider: local
+  roles:
+    admin: { label: "Administrator" }
+    customer: { label: "Customer" }
+
+collections:
+
+  products:
+    fields:
+      title:           { type: string, required: true, max: 200 }
+      slug:            { type: string, required: true, unique: true }
+      description:     { type: text }
+      brand:           { type: relation, target: brands, many: false, required: false }
+      category:        { type: relation, target: categories, many: false }
+      images:          { type: relation, target: _media, many: true }
+      price:           { type: decimal, scale: 2, required: true }
+      sale_price:      { type: decimal, scale: 2, required: false }
+      stock_status:    { type: enum, values: [in_stock, out_of_stock, backorder], default: in_stock }
+      status:          { type: enum, values: [draft, active, archived], default: draft }
+      featured:        { type: boolean, default: false }
+      average_rating:  { type: decimal, scale: 2, default: "0.00" }
+      review_count:    { type: integer, default: 0 }
+    timestamps: true
+    indexes: [slug, status, category]
+    route: /products/{slug}
+    access:
+      read: public
+      create: [admin]
+      update: [admin]
+      delete: [admin]
+
+  categories:
+    fields:
+      name:       { type: string, required: true }
+      slug:       { type: string, required: true, unique: true }
+      parent:     { type: relation, target: categories, many: false, required: false, on_delete: "set null" }
+      image:      { type: relation, target: _media, many: false, required: false }
+      sort_order: { type: integer, default: 0 }
+    timestamps: true
+    indexes: [slug]
+    access:
+      read: public
+      create: [admin]
+      update: [admin]
+      delete: [admin]
+
+  brands:
+    fields:
+      name: { type: string, required: true }
+      slug: { type: string, required: true, unique: true }
+      logo: { type: relation, target: _media, many: false, required: false }
+    timestamps: true
+    indexes: [slug]
+    access:
+      read: public
+      create: [admin]
+      update: [admin]
+      delete: [admin]
+
+  variants:
+    fields:
+      product: { type: relation, target: products, many: false, required: true, on_delete: cascade }
+      size:    { type: string, required: false }
+      color:   { type: string, required: false }
+      sku:     { type: string, required: true, unique: true }
+      price:   { type: decimal, scale: 2, required: false }
+      stock:   { type: integer, default: 0 }
+    timestamps: true
+    indexes: [product, sku]
+    access:
+      read: public
+      create: [admin]
+      update: [admin]
+      delete: [admin]
+
+  addresses:
+    fields:
+      label:       { type: string, required: true }
+      street:      { type: string, required: true }
+      city:        { type: string, required: true }
+      district:    { type: string, required: true }
+      postal_code: { type: string, required: false }
+      phone:       { type: string, required: true }
+    timestamps: true
+    access:
+      read: owner
+      create: authenticated
+      update: owner
+      delete: owner
+
+  carts:
+    fields: {}
+    timestamps: true
+    access:
+      read: owner
+      create: authenticated
+      update: owner
+      delete: owner
+
+  cart_items:
+    fields:
+      cart:     { type: relation, target: carts, many: false, required: true, on_delete: cascade }
+      product:  { type: relation, target: products, many: false, required: true }
+      variant:  { type: relation, target: variants, many: false, required: false }
+      quantity: { type: integer, required: true, default: 1 }
+    timestamps: true
+    indexes: [cart]
+    access:
+      read: owner
+      create: authenticated
+      update: owner
+      delete: owner
+
+  orders:
+    fields:
+      subtotal:         { type: decimal, scale: 2, required: true }
+      shipping:         { type: decimal, scale: 2, required: true }
+      total:            { type: decimal, scale: 2, required: true }
+      status:           { type: enum, values: [pending, confirmed, shipped, delivered, cancelled], default: pending }
+      payment_method:   { type: enum, values: [cod, online], default: cod }
+      shipping_address: { type: json, required: true }
+    timestamps: true
+    indexes: [status]
+    access:
+      read: { any: [admin, owner] }
+      create: authenticated
+      update: [admin]
+      delete: [admin]
+
+  order_items:
+    fields:
+      order:      { type: relation, target: orders, many: false, required: true, on_delete: cascade }
+      product:    { type: relation, target: products, many: false, required: true }
+      variant:    { type: relation, target: variants, many: false, required: false }
+      quantity:   { type: integer, required: true }
+      unit_price: { type: decimal, scale: 2, required: true }
+      total:      { type: decimal, scale: 2, required: true }
+    timestamps: true
+    indexes: [order]
+    access:
+      read: { any: [admin, owner] }
+      create: authenticated
+      update: [admin]
+      delete: [admin]
+
+  reviews:
+    fields:
+      product:           { type: relation, target: products, many: false, required: true, on_delete: cascade }
+      user_name:         { type: string, required: true }
+      rating:            { type: integer, required: true, min: 1, max: 5 }
+      title:             { type: string, required: true, min: 5, max: 100 }
+      body:              { type: text, required: true, min: 20, max: 2000 }
+      status:            { type: enum, values: [pending, approved, rejected], default: pending }
+      verified_purchase: { type: boolean, default: false }
+      helpful_up:        { type: integer, default: 0 }
+      helpful_down:      { type: integer, default: 0 }
+    timestamps: true
+    indexes: [product, status]
+    access:
+      read: public
+      create: authenticated
+      update: { any: [admin, owner] }
+      delete: [admin]
+
+  review_votes:
+    fields:
+      review: { type: relation, target: reviews, many: false, required: true, on_delete: cascade }
+      vote:   { type: enum, values: [up, down], required: true }
+    timestamps: true
+    indexes: [review]
+    access:
+      read: owner
+      create: authenticated
+      update: owner
+      delete: owner
+
+  coupons:
+    fields:
+      code:           { type: string, required: true, unique: true }
+      discount_type:  { type: enum, values: [percentage, fixed], required: true }
+      discount_value: { type: decimal, scale: 2, required: true }
+      expires_at:     { type: datetime, required: false }
+      min_order:      { type: decimal, scale: 2, required: false }
+      max_uses:       { type: integer, required: false }
+    timestamps: true
+    indexes: [code]
+    access:
+      read: [admin]
+      create: [admin]
+      update: [admin]
+      delete: [admin]
+
+  pages:
+    fields:
+      title:  { type: string, required: true }
+      slug:   { type: string, required: true, unique: true }
+      body:   { type: richtext }
+      status: { type: enum, values: [draft, published], default: draft }
+    timestamps: true
+    indexes: [slug, status]
+    route: /pages/{slug}
+    access:
+      read: public
+      create: [admin]
+      update: [admin]
+      delete: [admin]
+
+  settings:
+    fields:
+      site_name:          { type: string, required: true }
+      currency:           { type: enum, values: [USD, BDT], default: BDT }
+      contact_email:      { type: string, required: false }
+      announcement_text:  { type: string, required: false }
+    timestamps: true
+    access:
+      read: public
+      create: [admin]
+      update: [admin]
+      delete: [admin]

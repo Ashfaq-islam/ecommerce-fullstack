@@ -50,8 +50,10 @@ import { MOCK_CATEGORIES } from '@/data/mockCategories'
 import { COLOR_SWATCHES } from '@/data/mockColors'
 import { MOCK_ORDERS, ORDER_STATUS_LABELS } from '@/data/mockOrders'
 import { MOCK_PRODUCTS } from '@/data/mockProducts'
+import { getMockReviewsForProduct } from '@/data/mockReviews'
 import { MOCK_USERS, toPublicUser } from '@/data/mockUsers'
 import { DISTRICTS } from '@/data/districts'
+import { buildFacets } from '@/lib/catalogMappers'
 import { createToken, decodeToken } from '@/lib/token'
 
 export const DATA_SOURCE = process.env.NEXT_PUBLIC_DATA_SOURCE ?? 'mock'
@@ -289,39 +291,8 @@ function selectFeatured(products, limit) {
   return featured.length > 0 ? featured : bounded(source)
 }
 
-function buildFacets(products) {
-  const collect = (key) => {
-    const seen = new Set()
-
-    for (const product of products) {
-      for (const value of product[key] ?? []) {
-        seen.add(value)
-      }
-    }
-
-    // First-seen order keeps the merchandising order chosen in the data file
-    // instead of imposing an alphabetical sort on sizes and colours.
-    return [...seen]
-  }
-
-  const prices = products.map((product) => product.price).filter(Number.isFinite)
-
-  return {
-    sizes: collect('sizes'),
-    colors: collect('colors'),
-    // `brand` and `badge` are single strings per product, not arrays, so they are
-    // collected separately. Passing them to `collect` would spread the string
-    // into individual characters.
-    brands: [...new Set(products.map((product) => product.brand).filter(Boolean))],
-    badges: [...new Set(products.map((product) => product.badge).filter(Boolean))],
-    // Slugs that actually appear on a product, so callers can intersect this
-    // with the category list rather than offering filters that return nothing.
-    productCategories: [...new Set(products.map((product) => product.category).filter(Boolean))],
-    priceRange: {
-      min: prices.length > 0 ? Math.min(...prices) : 0,
-      max: prices.length > 0 ? Math.max(...prices) : 0,
-    },
-  }
+function buildFacetsFor(products) {
+  return buildFacets(products)
 }
 
 // Test seam. Lets a harness observe what the mock handlers actually received,
@@ -352,7 +323,7 @@ const routes = {
     CATALOGUE_LATENCY_MS,
   ],
 
-  'GET /products/facets': [() => buildFacets(MOCK_PRODUCTS), CATALOGUE_LATENCY_MS],
+  'GET /products/facets': [() => buildFacetsFor(MOCK_PRODUCTS), CATALOGUE_LATENCY_MS],
 
   'GET /products/:slug': [
     (_query, { params }) => {
@@ -373,6 +344,19 @@ const routes = {
   ],
 
   'GET /meta/districts': [() => DISTRICTS, CATALOGUE_LATENCY_MS],
+
+  // Reviews are keyed by product id. The summary the UI shows (average, count,
+  // per-star distribution) is derived from this same list by `reviewService`,
+  // so there is no separate summary endpoint to keep in sync.
+  'GET /reviews': [
+    (query) => {
+      const reviews = getMockReviewsForProduct(String(query.productId ?? ''))
+      const max = toNumber(query.limit)
+
+      return max !== null && max >= 0 ? reviews.slice(0, max) : reviews
+    },
+    CATALOGUE_LATENCY_MS,
+  ],
 
   // Swatches are a name-to-hex map, not a list, so a shallow copy is returned to
   // keep callers from mutating the module-level object.
@@ -671,8 +655,53 @@ async function extractMessage(response) {
   }
 }
 
+/**
+ * Translates the app's logical query into the DCMS query language.
+ *
+ * DCMS filters through `filter[field]=value` (and `filter[field][gte]=` for
+ * ranges). Bare `?category=men` is *silently ignored* — it returns the whole
+ * collection with no error — so forwarding the logical keys as-is would make
+ * every shop filter appear to work while returning the unfiltered catalogue.
+ *
+ * Only the filters the API can actually express are translated. `category` and
+ * `brand` are relations keyed by UUID while the URL carries a slug or a display
+ * name, and `badge`/`size`/`color` are not product fields at all, so those are
+ * dropped here and applied client-side by `applyClientFilters` in
+ * `lib/catalogMappers`. Drafts are always excluded from a public read.
+ */
+function toDcmsQuery(path, query) {
+  const source = query ?? {}
+  const translated = {}
+
+  for (const [key, value] of Object.entries(source)) {
+    if (value == null || value === '') {
+      continue
+    }
+
+    if (key === 'minPrice') {
+      translated['filter[price][gte]'] = String(value)
+    } else if (key === 'maxPrice') {
+      translated['filter[price][lte]'] = String(value)
+    } else if (key === 'featured') {
+      translated['filter[featured]'] = String(value)
+    } else if (key === 'status') {
+      translated[`filter[${key}]`] = String(value)
+    } else if (key !== 'category' && key !== 'brand' && key !== 'badge' && key !== 'size' && key !== 'color') {
+      // `limit`, `expand`, `cursor`, `sort`, `count` and anything else are
+      // forwarded unchanged.
+      translated[key] = value
+    }
+  }
+
+  if (path === '/products' && !translated['filter[status]']) {
+    translated['filter[status]'] = 'active'
+  }
+
+  return translated
+}
+
 async function dcmsRequest(path, { method, body, token, query, signal }) {
-  const url = buildDcmsUrl(path, query)
+  const url = buildDcmsUrl(path, toDcmsQuery(path, query))
 
   let response
   try {
@@ -696,14 +725,24 @@ async function dcmsRequest(path, { method, body, token, query, signal }) {
   }
 
   if (response.status === 204) {
-    return null
+    return { data: null, meta: {} }
   }
 
+  let payload
   try {
-    return await response.json()
+    payload = await response.json()
   } catch (error) {
     throw normalizeError(error, 'The store sent a response we could not read.')
   }
+
+  // DCMS wraps every response in `{ data, meta }`. Unwrapping here means the
+  // services see a bare payload, exactly as the mock transport resolves one, so
+  // neither they nor the components have to know which source answered.
+  if (payload && typeof payload === 'object' && 'data' in payload) {
+    return { data: payload.data, meta: payload.meta ?? {} }
+  }
+
+  return { data: payload, meta: {} }
 }
 
 // --- public entry point -----------------------------------------------------
@@ -719,13 +758,15 @@ export async function request(path, { method = 'GET', body = null, token = null,
   const upperMethod = method.toUpperCase()
 
   if (isDcms) {
-    return dcmsRequest(path, {
+    const { data } = await dcmsRequest(path, {
       method: upperMethod,
       body,
       token,
       query,
       signal,
     })
+
+    return data
   }
 
   return mockRequest(path, {
@@ -734,4 +775,58 @@ export async function request(path, { method = 'GET', body = null, token = null,
     token,
     query: query ?? {},
   })
+}
+
+/**
+ * Like `request`, but resolves `{ data, meta }` instead of the bare payload, so
+ * a caller that needs the DCMS `meta.total` (or a pagination cursor) does not
+ * have to bypass the transport. The mock transport has no envelope, so it
+ * resolves `{ data, meta: {} }`.
+ */
+export async function requestPage(path, options = {}) {
+  const { method = 'GET', query = null, signal = null } = options
+
+  if (isDcms) {
+    return dcmsRequest(path, { method: method.toUpperCase(), query, signal })
+  }
+
+  return { data: await mockRequest(path, { ...options, method: method.toUpperCase(), query: query ?? {} }), meta: {} }
+}
+
+/**
+ * Walks DCMS keyset pagination to completion and concatenates the pages.
+ *
+ * The DCMS paginates with an opaque `next_cursor`, not `limit`/`offset`, so a
+ * single request can never return the whole collection. Callers that need every
+ * record — deriving facets, expanding a detail page — use this instead. The
+ * page size is the documented maximum; `pageGuard` stops a server that keeps
+ * handing back a cursor from spinning this into an unbounded loop.
+ */
+export async function requestAllPages(path, { query = null, signal = null, pageGuard = 20 } = {}) {
+  const { data, meta } = await requestPage(path, { query, signal })
+
+  if (!Array.isArray(data)) {
+    return []
+  }
+
+  const records = [...data]
+  let cursor = meta?.next_cursor
+  let pages = 1
+
+  while (cursor && pages < pageGuard) {
+    const page = await requestPage(path, {
+      query: { ...(query ?? {}), cursor },
+      signal,
+    })
+
+    if (!Array.isArray(page.data) || page.data.length === 0) {
+      break
+    }
+
+    records.push(...page.data)
+    cursor = page.meta?.next_cursor
+    pages += 1
+  }
+
+  return records
 }
