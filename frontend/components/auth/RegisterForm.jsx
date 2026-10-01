@@ -2,26 +2,32 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 import Button from '@/components/common/Button'
-import { useAuth } from '@/hooks/useAuth'
-import {
-  MIN_PASSWORD_LENGTH,
-  PHONE_PLACEHOLDER,
-  getPasswordStrength,
-  isValidEmail,
-  isValidPhone,
-} from '@/lib/validation'
+import { createSignupRequest } from '@/services/authService'
+import { PHONE_PLACEHOLDER, isValidEmail } from '@/lib/validation'
 
 import styles from './AuthForm.module.css'
 
+// Self-registration is disabled on the DCMS: this form files a signup request
+// and an admin creates the account. Nothing is ever sent to the shopper's
+// browser here, so no password field exists.
 const INITIAL_VALUES = {
   name: '',
   email: '',
   phone: '',
-  password: '',
-  confirmPassword: '',
+  address: '',
+}
+
+// Local to this form on purpose. `isValidPhone` only accepts the bare national
+// format because checkout already depends on it, and widening that would
+// change validation on a page this task does not touch. Here we also allow the
+// `+880` prefix shoppers commonly type.
+const PHONE_INPUT_PATTERN = /^(?:\+?88)?01\d{9}$/
+
+function isValidPhoneInput(value) {
+  const trimmed = typeof value === 'string' ? value.trim() : ''
+  return PHONE_INPUT_PATTERN.test(trimmed.replace(/[\s-]/g, ''))
 }
 
 function validate(values) {
@@ -29,7 +35,6 @@ function validate(values) {
   const name = values.name.trim()
   const email = values.email.trim()
   const phone = values.phone.trim()
-  const password = values.password
 
   if (!name) {
     errors.name = 'Enter your full name.'
@@ -45,36 +50,19 @@ function validate(values) {
 
   if (!phone) {
     errors.phone = 'Enter your phone number.'
-  } else if (!isValidPhone(phone)) {
+  } else if (!isValidPhoneInput(phone)) {
     errors.phone = `Enter a valid phone number, for example ${PHONE_PLACEHOLDER}.`
-  }
-
-  if (!password) {
-    errors.password = 'Choose a password.'
-  } else if (password.length < MIN_PASSWORD_LENGTH) {
-    errors.password = `Use at least ${MIN_PASSWORD_LENGTH} characters.`
-  }
-
-  if (!values.confirmPassword) {
-    errors.confirmPassword = 'Re-enter your password.'
-  } else if (values.confirmPassword !== password) {
-    errors.confirmPassword = 'Passwords do not match.'
   }
 
   return errors
 }
 
 export default function RegisterForm() {
-  const router = useRouter()
-  const { register } = useAuth()
-
   const [values, setValues] = useState(INITIAL_VALUES)
   const [errors, setErrors] = useState({})
   const [formError, setFormError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [revealed, setRevealed] = useState({ password: false, confirmPassword: false })
-
-  const strength = getPasswordStrength(values.password)
+  const [isRequested, setIsRequested] = useState(false)
 
   const handleChange = (field) => (event) => {
     const { value } = event.target
@@ -103,17 +91,20 @@ export default function RegisterForm() {
     setIsSubmitting(true)
 
     try {
-      await register({
+      await createSignupRequest({
         name: values.name.trim(),
         email: values.email.trim(),
         phone: values.phone.trim(),
-        password: values.password,
+        address: values.address.trim(),
       })
-      router.push('/account')
+      setIsRequested(true)
     } catch (error) {
       setFormError(
-        error instanceof Error ? error.message : 'We could not create your account.',
+        error instanceof Error
+          ? error.message
+          : 'We could not process your request. Please try again.',
       )
+    } finally {
       setIsSubmitting(false)
     }
   }
@@ -121,11 +112,37 @@ export default function RegisterForm() {
   const fieldClass = (field) =>
     errors[field] ? `${styles.input} ${styles.inputInvalid}` : styles.input
 
+  if (isRequested) {
+    return (
+      <>
+        <div className={styles.header}>
+          <h2 className={styles.title}>Request received</h2>
+          <p className={styles.subtitle}>
+            We&apos;ll review your details and get in touch.
+          </p>
+        </div>
+
+        <p className={styles.success} role="status">
+          Request received. We&apos;ll contact you with login details shortly.
+        </p>
+
+        <p className={styles.footer}>
+          Already have an account?{' '}
+          <Link className={styles.footerLink} href="/login">
+            Sign in
+          </Link>
+        </p>
+      </>
+    )
+  }
+
   return (
     <>
       <div className={styles.header}>
-        <h2 className={styles.title}>Create your account</h2>
-        <p className={styles.subtitle}>Save your details for a faster checkout next time.</p>
+        <h2 className={styles.title}>Request an account</h2>
+        <p className={styles.subtitle}>
+          Tell us how to reach you and we&apos;ll set up your account.
+        </p>
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
@@ -194,104 +211,35 @@ export default function RegisterForm() {
               value={values.phone}
               onChange={handleChange('phone')}
               aria-invalid={Boolean(errors.phone)}
-              aria-describedby={errors.phone ? 'reg-phone-error' : undefined}
+              aria-describedby={errors.phone ? 'reg-phone-error' : 'reg-phone-hint'}
               disabled={isSubmitting}
             />
             {errors.phone ? (
               <p className={styles.error} id="reg-phone-error">
                 {errors.phone}
               </p>
-            ) : null}
+            ) : (
+              <p className={styles.hint} id="reg-phone-hint">
+                11 digits, with or without the +880 prefix.
+              </p>
+            )}
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="reg-password">
-              Password
+            <label className={styles.label} htmlFor="reg-address">
+              Address <span className={styles.hint}>(optional)</span>
             </label>
-            <div className={styles.passwordRow}>
-              <input
-                className={fieldClass('password')}
-                id="reg-password"
-                name="password"
-                type={revealed.password ? 'text' : 'password'}
-                autoComplete="new-password"
-                placeholder="At least 8 characters"
-                value={values.password}
-                onChange={handleChange('password')}
-                aria-invalid={Boolean(errors.password)}
-                aria-describedby={errors.password ? 'reg-password-error' : 'password-meter'}
-                disabled={isSubmitting}
-              />
-              <button
-                type="button"
-                className={styles.reveal}
-                onClick={() =>
-                  setRevealed((current) => ({ ...current, password: !current.password }))
-                }
-                disabled={isSubmitting}
-              >
-                {revealed.password ? 'Hide' : 'Show'}
-              </button>
-            </div>
-            {errors.password ? (
-              <p className={styles.error} id="reg-password-error">
-                {errors.password}
-              </p>
-            ) : null}
-            {values.password ? (
-              <div className={styles.meter} id="password-meter">
-                <span className={styles.meterTrack}>
-                  {[0, 1, 2, 3].map((index) => (
-                    <span
-                      key={index}
-                      className={styles.meterSegment}
-                      data-filled={index < strength.score || undefined}
-                      data-score={strength.score || undefined}
-                    />
-                  ))}
-                </span>
-                <span className={styles.meterLabel}>{strength.label}</span>
-              </div>
-            ) : null}
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="confirm-password">
-              Confirm password
-            </label>
-            <div className={styles.passwordRow}>
-              <input
-                className={fieldClass('confirmPassword')}
-                id="confirm-password"
-                name="confirmPassword"
-                type={revealed.confirmPassword ? 'text' : 'password'}
-                autoComplete="new-password"
-                placeholder="Re-enter your password"
-                value={values.confirmPassword}
-                onChange={handleChange('confirmPassword')}
-                aria-invalid={Boolean(errors.confirmPassword)}
-                aria-describedby={errors.confirmPassword ? 'confirm-password-error' : undefined}
-                disabled={isSubmitting}
-              />
-              <button
-                type="button"
-                className={styles.reveal}
-                onClick={() =>
-                  setRevealed((current) => ({
-                    ...current,
-                    confirmPassword: !current.confirmPassword,
-                  }))
-                }
-                disabled={isSubmitting}
-              >
-                {revealed.confirmPassword ? 'Hide' : 'Show'}
-              </button>
-            </div>
-            {errors.confirmPassword ? (
-              <p className={styles.error} id="confirm-password-error">
-                {errors.confirmPassword}
-              </p>
-            ) : null}
+            <textarea
+              className={styles.input}
+              id="reg-address"
+              name="address"
+              rows={3}
+              autoComplete="street-address"
+              placeholder="e.g. House 12, Road 5, Dhaka 1207"
+              value={values.address}
+              onChange={handleChange('address')}
+              disabled={isSubmitting}
+            />
           </div>
         </div>
 
@@ -302,7 +250,7 @@ export default function RegisterForm() {
         ) : null}
 
         <Button type="submit" fullWidth loading={isSubmitting}>
-          {isSubmitting ? 'Creating account' : 'Create account'}
+          {isSubmitting ? 'Sending request' : 'Request account'}
         </Button>
 
         <p className={styles.footer}>

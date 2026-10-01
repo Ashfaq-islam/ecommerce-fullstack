@@ -127,6 +127,36 @@ export async function register(userData) {
   }
 }
 
+/** Creates a signup request (self-registration disabled in DCMS). */
+export async function createSignupRequest({ name, email, phone, address }) {
+  try {
+    return await request('/signup_requests', {
+      method: 'POST',
+      body: {
+        name,
+        email,
+        phone,
+        address: address ?? undefined,
+        status: 'pending',
+      },
+    })
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 409) {
+      throw new ApiError('This email has already requested an account.', {
+        status: 409,
+        code: 'signup_request_conflict',
+      })
+    }
+
+    // Everything that is not a duplicate email gets the same message: the raw
+    // DCMS text is aimed at developers, not shoppers.
+    throw new ApiError('We could not process your request. Please try again.', {
+      status: error instanceof ApiError ? error.status : 500,
+      code: 'signup_request_failed',
+    })
+  }
+}
+
 /**
  * Resolves the signed-in user, or `null` when there is no usable session.
  * An expired or unparseable token is cleared on the way out.
