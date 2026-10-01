@@ -1,4 +1,4 @@
-import { isValidPhone } from '@/lib/validation'
+import { PHONE_PLACEHOLDER, isValidPhone } from '@/lib/validation'
 
 export const DEFAULT_PAYMENT_METHOD = 'cod'
 
